@@ -10,7 +10,7 @@ import streamlit as st
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("dashboard/main_data.csv")
+    df = pd.read_csv("Submission Belajar Fundamental Analisis Data/dashboard/main_data.csv")
     df['dteday'] = pd.to_datetime(df['dteday'])
     return df
 
