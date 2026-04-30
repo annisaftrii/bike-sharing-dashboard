@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
+import os
 
 # =============================================
 # LOAD DATA
@@ -10,7 +11,9 @@ import streamlit as st
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("Submission Belajar Fundamental Analisis Data/dashboard/main_data.csv")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, "main_data.csv")
+    df = pd.read_csv(file_path)
     df['dteday'] = pd.to_datetime(df['dteday'])
     return df
 
