@@ -16,12 +16,17 @@ def load_data():
     df = pd.read_csv(file_path)
     df['dteday'] = pd.to_datetime(df['dteday'])
     
-    # Mapping label untuk visualisasi
-    season_map = {1: 'Semi', 2: 'Panas', 3: 'Gugur', 4: 'Dingin'}
-    df['season'] = df['season'].map(season_map)
+    # Mapping label hanya jika kolom berisi angka (menghindari hasil 'nan')
+    if df['season'].dtype in [np.int64, np.float64]:
+        season_map = {1: 'Semi', 2: 'Panas', 3: 'Gugur', 4: 'Dingin'}
+        df['season'] = df['season'].map(season_map)
     
-    workingday_map = {0: 'Hari Libur', 1: 'Hari Kerja'}
-    df['workingday'] = df['workingday'].map(workingday_map)
+    if df['workingday'].dtype in [np.int64, np.float64]:
+        workingday_map = {0: 'Hari Libur', 1: 'Hari Kerja'}
+        df['workingday'] = df['workingday'].map(workingday_map)
+
+    # Membersihkan baris kosong agar tidak muncul 'nan' di filter sidebar
+    df = df.dropna(subset=['season', 'workingday'])
     
     return df
 
@@ -44,11 +49,13 @@ start_date, end_date = st.sidebar.date_input(
     value=[min_date, max_date]
 )
 
-# Filter Musim
+# Filter Musim (Mengambil list unik yang sudah bersih dari nan)
+season_options = main_data['season'].unique()
+
 selected_seasons = st.sidebar.multiselect(
     "Pilih Musim:",
-    options=main_data['season'].unique(),
-    default=main_data['season'].unique()
+    options=season_options,
+    default=season_options
 )
 
 # Logic Filtering
@@ -70,33 +77,37 @@ st.title('🚲 Dashboard Analisis Bike Sharing')
 # PERTANYAAN 1
 st.subheader('Pertanyaan 1: Total Peminjaman Sepeda pada Hari Kerja vs Hari Libur (2011-2012)')
 
-fig1, axes1 = plt.subplots(1, 2, figsize=(12, 5))
-sns.barplot(data=df_day_clean, x='workingday', y='cnt', estimator=sum, errorbar=None, palette='Set2', ax=axes1[0])
-axes1[0].set_title('Harian')
-axes1[0].set_xlabel('Jenis Hari')
-axes1[0].set_ylabel('Total Peminjaman')
+# Hanya tampilkan plot jika data hasil filter tersedia
+if not df_day_clean.empty:
+    fig1, axes1 = plt.subplots(1, 2, figsize=(12, 5))
+    sns.barplot(data=df_day_clean, x='workingday', y='cnt', estimator=sum, errorbar=None, palette='Set2', ax=axes1[0])
+    axes1[0].set_title('Harian')
+    axes1[0].set_xlabel('Jenis Hari')
+    axes1[0].set_ylabel('Total Peminjaman')
 
-sns.barplot(data=df_hour_clean, x='workingday', y='cnt', estimator=sum, errorbar=None, palette='Set2', ax=axes1[1])
-axes1[1].set_title('Per Jam')
-axes1[1].set_xlabel('Jenis Hari')
-axes1[1].set_ylabel('Total Peminjaman')
+    sns.barplot(data=df_hour_clean, x='workingday', y='cnt', estimator=sum, errorbar=None, palette='Set2', ax=axes1[1])
+    axes1[1].set_title('Per Jam')
+    axes1[1].set_xlabel('Jenis Hari')
+    axes1[1].set_ylabel('Total Peminjaman')
 
-plt.tight_layout()
-st.pyplot(fig1)
+    plt.tight_layout()
+    st.pyplot(fig1)
 
-# PERTANYAAN 2
-st.subheader('Pertanyaan 2: Total Peminjaman Sepeda per Musim (2011-2012)')
+    # PERTANYAAN 2
+    st.subheader('Pertanyaan 2: Total Peminjaman Sepeda per Musim (2011-2012)')
 
-fig2, axes2 = plt.subplots(1, 2, figsize=(12, 5))
-sns.barplot(data=df_day_clean, x='season', y='cnt', estimator=sum, errorbar=None, palette='Set1', ax=axes2[0])
-axes2[0].set_title('Harian')
-axes2[0].set_xlabel('Musim')
-axes2[0].set_ylabel('Total Peminjaman')
+    fig2, axes2 = plt.subplots(1, 2, figsize=(12, 5))
+    sns.barplot(data=df_day_clean, x='season', y='cnt', estimator=sum, errorbar=None, palette='Set1', ax=axes2[0])
+    axes2[0].set_title('Harian')
+    axes2[0].set_xlabel('Musim')
+    axes2[0].set_ylabel('Total Peminjaman')
 
-sns.barplot(data=df_hour_clean, x='season', y='cnt', estimator=sum, errorbar=None, palette='Set1', ax=axes2[1])
-axes2[1].set_title('Per Jam')
-axes2[1].set_xlabel('Musim')
-axes2[1].set_ylabel('Total Peminjaman')
+    sns.barplot(data=df_hour_clean, x='season', y='cnt', estimator=sum, errorbar=None, palette='Set1', ax=axes2[1])
+    axes2[1].set_title('Per Jam')
+    axes2[1].set_xlabel('Musim')
+    axes2[1].set_ylabel('Total Peminjaman')
 
-plt.tight_layout()
-st.pyplot(fig2)
+    plt.tight_layout()
+    st.pyplot(fig2)
+else:
+    st.warning("Silakan pilih filter musim di sidebar untuk menampilkan data.")
