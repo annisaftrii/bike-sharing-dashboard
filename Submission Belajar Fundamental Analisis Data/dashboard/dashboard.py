@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
@@ -9,7 +10,7 @@ import streamlit as st
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("D:/Submission Belajar Fundamental Analisis Data/dashboard/main_data.csv")
+    df = pd.read_csv("dashboard/main_data.csv")
     df['dteday'] = pd.to_datetime(df['dteday'])
     return df
 
